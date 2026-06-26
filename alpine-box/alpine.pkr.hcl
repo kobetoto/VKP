@@ -43,7 +43,9 @@ source "virtualbox-iso" "alpine" {
   cpus                 = 2
   memory               = 1024
   disk_size            = 8192   # Mo
-  hard_drive_interface = "sata" #  disque vu comme /dev/sda
+  hard_drive_interface = "sata" # disque vu comme /dev/sda
+  iso_interface        = "sata" # SATA (Serial ATA), c'est une norme d'interface de stockage : la façon dont un disque (dur ou SSD) se connecte à la carte mère et dialogue avec elle
+  guest_additions_mode = "disable" 
 
   headless = false # false pour DÉBUGGER (regarder la console), true ensuite
 
