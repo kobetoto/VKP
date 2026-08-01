@@ -1,3 +1,4 @@
 *.o
 alpine-box/*.iso
 .vagrant/
+script_*.sh
