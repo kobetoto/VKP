@@ -26,6 +26,7 @@ Vagrant.configure("2") do |config|
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "kobe/alpine-3.24"
   config.ssh.forward_agent = true #gitShit
+  config.ssh.forward_x11 = true
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
@@ -126,17 +127,28 @@ Vagrant.configure("2") do |config|
   config.ssh.shell = "/bin/sh"
   config.vm.provision "shell", inline: <<-SHELL
     apk update
-    apk add vim git docker docker-cli-compose
+    apk add vim git docker docker-cli-compose curl firefox xauth font-dejavu
+    grep -q 'thodavid.42.fr' /etc/hosts || echo "127.0.0.1 thodavid.42.fr" >> /etc/hosts
     rc-update add docker default
     service docker start
     addgroup vagrant docker
     mkdir -p /home/thodavid/data/mariadb
     mkdir -p /home/thodavid/data/wordpress
+    sed -i 's/^#*X11Forwarding.*/X11Forwarding yes/' /etc/ssh/sshd_config
+    rc-service sshd restart
   SHELL
 
-  ## signature commit (non root pour que la signature ne soit pas root/.git...)
+## signature commit (non root pour que la signature ne soit pas root/.git...)
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
-  git config --global user.name  "kobetoto"
-  git config --global user.email "thodavid@student.42.fr"
+    git config --global user.name  "kobetoto"
+    git config --global user.email "thodavid@student.42.fr"
+  SHELL
+
+  ## fix eth1 — rejoué à CHAQUE up/reload, APRÈS la config réseau Vagrant
+  ## (bug ifstate : l'adresse n'est jamais posée au boot)
+  config.vm.provision "eth1fix", type: "shell", run: "always", inline: <<-SHELL
+    ifdown eth1 2>/dev/null
+    ifup eth1 2>/dev/null
+    ip addr show eth1 | grep -q 'inet 192.168.56.10' || ip addr add 192.168.56.10/24 dev eth1
   SHELL
 end
