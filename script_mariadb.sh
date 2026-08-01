@@ -1,0 +1,17 @@
+#!/bin/sh
+if [ ! -d /var/lib/mysql/mysql ]; then 
+	mariadb-install-db --user=mysql --datadir=/var/lib/mysql #CREER LES TABLES SYSTEMES PEUPLE LE DATADIR VIERGE
+	mariadbd --user=mysql --bootstrap <<-EOF
+		FLUSH PRIVILEGES;
+		CREATE DATABASE $MYSQL_DATABASE;
+		CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
+		GRANT ALL PRIVILEGES ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';
+		CREATE USER '$MYSQL_SUPER_USER'@'%' IDENTIFIED BY '$MYSQL_SUPER_PASSWORD';
+		GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_SUPER_USER'@'%' WITH GRANT OPTION;
+		ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
+		DROP DATABASE IF EXISTS test;
+		DROP USER IF EXISTS ''@'localhost';
+		FLUSH PRIVILEGES;
+	EOF
+fi
+exec mariadbd --user=mysql
